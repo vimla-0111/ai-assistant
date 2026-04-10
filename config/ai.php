@@ -13,8 +13,8 @@ return [
     |
     */
 
-    'default' => 'openai',
-    // 'default' => 'openrouter',
+    // 'default' => 'openai',
+    'default' => 'openrouter',
     'default_for_images' => 'gemini',
     'default_for_audio' => 'openai',
     'default_for_transcription' => 'openai',
@@ -128,4 +128,17 @@ return [
         ],
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | System Prompts and Context Paths used by Agents
+    |--------------------------------------------------------------------------
+    |
+    | Below you may configure the system prompts and context files used by your agents to guide their behavior and
+    | provide necessary information about the database schema or other relevant data. These should be paths to text
+    | files that contain the prompts and context information. You can customize these files to better suit the needs
+    | of your agents and the tasks they will be performing.
+    |
+    */
+    'prompt_path' => 'ai/prompt.md',
+    'db_schema_path' => 'ai/context/database_schema.txt',
 ];

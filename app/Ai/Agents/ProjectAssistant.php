@@ -3,6 +3,7 @@
 namespace App\Ai\Agents;
 
 use App\Ai\Tools\DatabaseQueryTool;
+use App\Ai\Tools\QuiryBuilderTool;
 use App\Models\AgentConversationMessage;
 use App\Models\User;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -17,7 +18,7 @@ use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Promptable;
 use Stringable;
 
-class ProjectAssistant implements Agent, Conversational, HasStructuredOutput, HasTools
+class ProjectAssistant implements Agent, Conversational, HasTools
 {
     use Promptable, RemembersConversations;
 
@@ -30,29 +31,8 @@ class ProjectAssistant implements Agent, Conversational, HasStructuredOutput, Ha
      */
     public function instructions(): Stringable|string
     {
-        return 'You are a Product assistant. Answer questions about the user\'s accurately. Only share information returned by your tools. Be honest and accurate.';
-        return `You are a smart database assistant. You have access to a tool that runs MySQL queries and returns results.
-
-## Your Job
-Understand the user's question, translate it into a correct MySQL query, execute it, and respond in clear natural language.
-
-## Rules
-1. Always inspect the schema first if you're unsure about table/column names before querying.
-2. Only run SELECT queries. Never INSERT, UPDATE, DELETE, DROP, or ALTER.
-3. Use LIMIT (default 50) unless the user explicitly asks for more.
-4. Never expose raw SQL in your response unless the user asks for it.
-5. Respond in the same language the user used.
-
-## DB Schema
-<schema>
-` . Storage::disk('local')->get('ai/context/database_schema.txt') . `
-</schema>
-
-## Response Format
-- Answer in natural language (e.g. "There are 142 interviewee registered this mont.")
-- For lists/tables of data, present them in a readable format.
-- If no results found, say so clearly.
-- If the question is ambiguous, ask for clarification before querying.`;
+        // return 'You are a Product assistant. Answer questions about the user\'s accurately. Only share information returned by your tools. Be honest and accurate. Generate a query based on laravel query builder syntax. Only generate the query, do not execute it. Always return a valid query. Do not include any explanations or apologies. Only return the query.';
+        return  config('ai.prompt_path') ? Storage::disk('local')->get(config('ai.prompt_path')) . Storage::disk('local')->get('ai/context/database_schema.txt') : 'You are a smart database assistant. You have access to a tool that runs MySQL queries and returns results.';
     }
 
     /**
@@ -79,16 +59,17 @@ Understand the user's question, translate it into a correct MySQL query, execute
      */
     public function tools(): iterable
     {
-        return [new DatabaseQueryTool];
+        return [new QuiryBuilderTool];
+        // return [new DatabaseQueryTool];
     }
 
     /**
      * Get the agent's structured output schema definition.
      */
-    public function schema(JsonSchema $schema): array
-    {
-        return [
-            'value' => $schema->string()->required(),
-        ];
-    }
+    // public function schema(JsonSchema $schema): array
+    // {
+    //     return [
+    //         'value' => $schema->string()->required(),
+    //     ];
+    // }
 }

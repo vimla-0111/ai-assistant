@@ -56,6 +56,8 @@ class DatabaseQueryTool implements Tool
         '<=',
         '>=',
         'like',
+        'and',
+        'or',
     ];
 
     private const int MAX_ROWS = 10;
@@ -85,7 +87,7 @@ class DatabaseQueryTool implements Tool
     public function description(): Stringable|string
     {
         //        return 'Executes a read-only MySQL SELECT query and returns the results.
-        // Use this to answer user questions by querying the database. 
+        // Use this to answer user questions by querying the database.
         // Input: a valid MySQL SELECT statement.
         // Output: array of rows or an error message.
         // Never use this for INSERT, UPDATE, DELETE, or DDL statements.';
@@ -103,7 +105,6 @@ class DatabaseQueryTool implements Tool
         $allowed = Arr::get(self::ALLOWED_COLUMNS, $table, []);
 
         Log::info('DatabaseQueryTool invoked', ['table' => $table, 'columns' => $columns, 'filters' => $request['where'] ?? []]);
-        Log::info('Allowed columns for table', ['allowed' => $allowed]);
 
         // Reject any column not in the allowlist
         if ($error = $this->validateColumns($columns, $allowed, $table)) {
@@ -112,9 +113,6 @@ class DatabaseQueryTool implements Tool
 
         // Build the query with the query builder
         $query = DB::connection('iresource_db')->table($table)
-            ->select($columns)
-            ->limit(min($request->integer('limit', 10), self::MAX_ROWS));
-        DB::connection('iresource_db')->table('users')
             ->select($columns)
             ->limit(min($request->integer('limit', 10), self::MAX_ROWS));
 
@@ -139,7 +137,7 @@ class DatabaseQueryTool implements Tool
     {
         return [
             'table' => $schema->string()
-                // ->enum(['users', 'orders', 'tickets', 'subscriptions', 'invoices'])
+                ->description('Table name to query.')
                 ->required(),
 
             'columns' => $schema->array()
@@ -148,12 +146,21 @@ class DatabaseQueryTool implements Tool
                 ->required(),
 
             'where' => $schema->array()
-                ->items($schema->object([
-                    'column' => $schema->string()->required(),
-                    'operator' => $schema->string()->default('='),
-                    'value' => $schema->string()->required(),
-                ]))
-                ->description('Filter conditions.'),
+                ->items(
+                    $schema->object([
+                        'column' => $schema->string()
+                            ->description('Column name to filter on.')
+                            ->required(),
+                        'operator' => $schema->string()
+                            ->description('Comparison operator (=, !=, <, >, <=, >=, like).')
+                            ->default('='),
+                        'value' => $schema->string()
+                            ->description('Filter value.')
+                            ->required(),
+                    ])
+                )
+                ->description('Filter conditions.')
+                ->default([]),
 
             'limit' => $schema->integer()
                 ->description('Max rows to return.')
