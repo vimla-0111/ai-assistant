@@ -8,16 +8,17 @@ use App\Models\AgentConversationMessage;
 use App\Models\User;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Storage;
+use Laravel\Ai\Attributes\MaxSteps;
 use Laravel\Ai\Concerns\RemembersConversations;
 use Laravel\Ai\Contracts\Agent;
 use Laravel\Ai\Contracts\Conversational;
-use Laravel\Ai\Contracts\HasStructuredOutput;
 use Laravel\Ai\Contracts\HasTools;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Promptable;
 use Stringable;
 
+#[MaxSteps(5)]
 class ProjectAssistant implements Agent, Conversational, HasTools
 {
     use Promptable, RemembersConversations;
@@ -31,8 +32,11 @@ class ProjectAssistant implements Agent, Conversational, HasTools
      */
     public function instructions(): Stringable|string
     {
-        // return 'You are a Product assistant. Answer questions about the user\'s accurately. Only share information returned by your tools. Be honest and accurate. Generate a query based on laravel query builder syntax. Only generate the query, do not execute it. Always return a valid query. Do not include any explanations or apologies. Only return the query.';
-        return  config('ai.prompt_path') ? Storage::disk('local')->get(config('ai.prompt_path')) . Storage::disk('local')->get('ai/context/database_schema.txt') : 'You are a smart database assistant. You have access to a tool that runs MySQL queries and returns results.';
+        return config('ai.prompt_path') && Storage::disk('local')->exists(config('ai.prompt_path'))
+            ? Storage::disk('local')->get(config('ai.prompt_path')).Storage::disk('local')->get('ai/context/database_schema.txt')
+            : 'You are a smart database assistant. You have access to tools that run queries and return results. '
+            .'After using tools to gather information, always provide a clear, concise summary of the results in your response. '
+            .'Return the actual data from your tool results, formatted clearly for the user.';
     }
 
     /**

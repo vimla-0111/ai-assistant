@@ -7,12 +7,14 @@ test('authenticated users can prompt the project assistant from the agent route'
     $user = User::factory()->create();
 
     ProjectAssistant::fake([
-        ['value' => 'The schema includes the users table.'],
+        'The schema includes the users table.',
     ]);
 
     $response = $this
         ->actingAs($user)
-        ->get('/agent?prompt=Which tables are available?');
+        ->postJson(route('agent.prompt'), [
+            'prompt' => 'Which tables are available?',
+        ]);
 
     $response
         ->assertOk()
@@ -23,16 +25,12 @@ test('authenticated users can prompt the project assistant from the agent route'
     ProjectAssistant::assertPrompted('Which tables are available?');
 });
 
-test('agent route requires a prompt query string', function () {
+test('agent route requires a prompt payload', function () {
     $user = User::factory()->create();
 
     $response = $this
         ->actingAs($user)
-        ->get('/agent');
+        ->postJson(route('agent.prompt'), []);
 
-    $response
-        ->assertUnprocessable()
-        ->assertJson([
-            'message' => 'Pass a prompt using the ?prompt= query string.',
-        ]);
+    $response->assertInvalid(['prompt']);
 });
