@@ -33,6 +33,7 @@ class AgentController extends Controller
         $prompt = $request->validated('prompt');
 
         try {
+            // using openrouter provider
             $response = ProjectAssistant::make(user: $user)
                 ->continueLastConversation($user)
                 ->prompt(
@@ -41,6 +42,15 @@ class AgentController extends Controller
                     model: 'nvidia/nemotron-3-super-120b-a12b:free',
                     timeout: 120,
                 );
+
+            // using openai provider
+            // $response = ProjectAssistant::make(user: $user)
+            //     ->continueLastConversation($user)
+            //     ->prompt(
+            //         $prompt,
+            //         provider: Lab::OpenAI,
+            //         timeout: 120,
+            //     );
         } catch (Throwable $exception) {
             report($exception);
 
@@ -75,7 +85,7 @@ class AgentController extends Controller
             ->get(['id', 'role', 'content', 'created_at'])
             ->reverse()
             ->values()
-            ->map(fn (AgentConversationMessage $message): array => [
+            ->map(fn(AgentConversationMessage $message): array => [
                 'id' => (string) $message->id,
                 'role' => $message->role,
                 'content' => $message->content,

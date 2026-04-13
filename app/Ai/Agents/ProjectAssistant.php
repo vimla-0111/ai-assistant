@@ -23,7 +23,7 @@ class ProjectAssistant implements Agent, Conversational, HasTools
 {
     use Promptable, RemembersConversations;
 
-    private $messageLimit = 10;
+    private $messageLimit = 5;
 
     public function __construct(public User $user) {}
 
