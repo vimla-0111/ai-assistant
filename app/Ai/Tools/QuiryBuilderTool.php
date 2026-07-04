@@ -14,7 +14,11 @@ class QuiryBuilderTool implements Tool
      */
     public function description(): Stringable|string
     {
-        return 'Execute laravel queries and return results. Only execute SELECT queries. Always return results in a JSON format.';
+        return 'Execute Laravel query builder expressions against the iresource_db database and return results as JSON. '
+            .'Only SELECT queries and aggregate methods (count, sum, avg, get, first, pluck, value) are allowed. '
+            .'Always use DB::connection("iresource_db") for all queries. '
+            .'IMPORTANT - users table "active" column values: 1 = inactive, 2 = active. '
+            .'Always use ->where("active", 2) when filtering for active users/candidates.';
     }
 
     /**
@@ -24,9 +28,10 @@ class QuiryBuilderTool implements Tool
     {
         $query = $request->string('query');
         try {
-            return eval("return {$query};");
+            $result = eval("return {$query};");
+            return is_string($result) ? $result : json_encode($result);
         } catch (\Throwable $e) {
-            return  $e->getMessage();
+            return json_encode(['error' => $e->getMessage()]);
         }
     }
 
