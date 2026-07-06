@@ -111,7 +111,15 @@
                                         ? 'bg-slate-900 text-white shadow-slate-950/20'
                                         : 'border border-slate-200 bg-white text-slate-700 shadow-slate-200/70'"
                                 >
-                                    <p class="whitespace-pre-wrap" x-text="message.content"></p>
+                                    <template x-if="message.role === 'user'">
+                                        <p class="whitespace-pre-wrap" x-text="message.content"></p>
+                                    </template>
+                                    <template x-if="message.role === 'assistant'">
+                                        <div 
+                                            class="max-w-none space-y-3 [&_strong]:font-semibold [&_em]:italic [&_h1]:text-lg [&_h1]:font-bold [&_h2]:text-base [&_h2]:font-bold [&_h3]:text-sm [&_h3]:font-bold [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_li]:ml-2 [&_code]:bg-slate-100 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:rounded [&_code]:text-xs [&_code]:font-mono [&_table]:w-full [&_table]:border [&_th]:border [&_th]:px-3 [&_th]:py-2 [&_th]:bg-slate-50 [&_th]:font-semibold [&_td]:border [&_td]:px-3 [&_td]:py-2"
+                                            x-html="renderMarkdown(message.content)"
+                                        ></div>
+                                    </template>
                                 </div>
                             </div>
                         </article>

@@ -1,3 +1,5 @@
+import { marked } from 'marked';
+
 export default function registerAgentChat(Alpine) {
     Alpine.data('agentChat', ({ endpoint, initialMessages = [] }) => ({
         endpoint,
@@ -8,6 +10,13 @@ export default function registerAgentChat(Alpine) {
 
         init() {
             this.scrollToBottom();
+        },
+
+        renderMarkdown(content) {
+            return marked(content, {
+                breaks: true,
+                gfm: true,
+            });
         },
 
         fillPrompt(prompt) {
