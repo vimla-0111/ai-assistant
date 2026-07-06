@@ -4,6 +4,7 @@ namespace App\Ai\Agents;
 
 use App\Ai\Tools\DatabaseQueryTool;
 use App\Ai\Tools\QuiryBuilderTool;
+use App\Ai\Tools\ResumeSearchTool;
 use App\Models\AgentConversationMessage;
 use App\Models\User;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
@@ -63,8 +64,7 @@ class ProjectAssistant implements Agent, Conversational, HasTools
      */
     public function tools(): iterable
     {
-        return [new QuiryBuilderTool];
-        // return [new DatabaseQueryTool];
+        return [new QuiryBuilderTool, new ResumeSearchTool];
     }
 
     /**
