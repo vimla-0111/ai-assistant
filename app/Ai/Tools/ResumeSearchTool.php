@@ -24,14 +24,14 @@ class ResumeSearchTool implements Tool
 
     public function handle(Request $request): Stringable|string
     {
-        $query       = (string) $request->string('query');
+        $query = (string) $request->string('query');
         $candidateId = $request->integer('candidate_id', 0);
-        $limit       = min($request->integer('limit', 5), 10);
+        $limit = min($request->integer('limit', 5), 10);
 
         Log::info('ResumeSearchTool: invoked', [
-            'query'        => $query,
+            'query' => $query,
             'candidate_id' => $candidateId ?: 'all',
-            'limit'        => $limit,
+            'limit' => $limit,
         ]);
 
         try {
@@ -50,7 +50,7 @@ class ResumeSearchTool implements Tool
             if ($candidateId > 0) {
                 $filter = [
                     'must' => [[
-                        'key'   => 'candidate_id',
+                        'key' => 'candidate_id',
                         'match' => ['value' => $candidateId],
                     ]],
                 ];
@@ -65,17 +65,17 @@ class ResumeSearchTool implements Tool
             }
 
             $hits = array_map(fn (array $hit) => [
-                'candidate_id'   => $hit['payload']['candidate_id'],
+                'candidate_id' => $hit['payload']['candidate_id'],
                 'candidate_name' => $hit['payload']['candidate_name'],
-                'relevance'      => round($hit['score'], 3),
-                'excerpt'        => $hit['payload']['chunk_text'],
+                'relevance' => round($hit['score'], 3),
+                'excerpt' => $hit['payload']['chunk_text'],
             ], $results);
 
             Log::info('ResumeSearchTool: returning results', [
-                'query'      => $query,
-                'hits'       => count($hits),
+                'query' => $query,
+                'hits' => count($hits),
                 'candidates' => array_unique(array_column($hits, 'candidate_name')),
-                'top_score'  => $hits[0]['relevance'] ?? null,
+                'top_score' => $hits[0]['relevance'] ?? null,
             ]);
 
             return json_encode(['results' => $hits, 'count' => count($hits)]);

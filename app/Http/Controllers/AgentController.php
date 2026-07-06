@@ -85,7 +85,7 @@ class AgentController extends Controller
             ->get(['id', 'role', 'content', 'created_at'])
             ->reverse()
             ->values()
-            ->map(fn(AgentConversationMessage $message): array => [
+            ->map(fn (AgentConversationMessage $message): array => [
                 'id' => (string) $message->id,
                 'role' => $message->role,
                 'content' => $message->content,

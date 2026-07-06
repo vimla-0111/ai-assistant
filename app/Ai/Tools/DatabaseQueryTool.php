@@ -15,38 +15,38 @@ use Stringable;
 class DatabaseQueryTool implements Tool
 {
     private const array ALLOWED_COLUMNS =
-    [
-        'users' => ['id', 'department_id', 'college_id', 'course_id', 'level_id', 'requisition_id', 'name', 'email', 'role', 'gender', 'dob', 'address', 'city', 'state', 'country', 'mobile', 'status', 'active', 'candidate_status', 'last_salary', 'expected_salary', 'interview_percentage', 'practical_percentage', 'technical_percentage', 'communication', 'attitude', 'logical', 'is_teamlead', 'is_requester', 'last_login_at', 'created_at', 'updated_at', 'deleted_at'],
-        'departments' => ['id', 'name', 'slug', 'icon', 'is_active', 'created_at', 'updated_at'],
-        'designations' => ['id', 'department_id', 'name', 'slug', 'created_at', 'updated_at'],
-        'levels' => ['id', 'name', 'created_at', 'updated_at'],
-        'colleges' => ['id', 'name', 'cutoff', 'is_active', 'created_at', 'updated_at', 'deleted_at'],
-        'courses' => ['id', 'name', 'created_at', 'updated_at', 'deleted_at'],
-        'requisitions' => ['id', 'user_id', 'department_id', 'level_id', 'designation', 'position', 'experience', 'position_still_open', 'position_closed', 'status', 'priority_criteria', 'reporting_manager', 'educational_qualification', 'responsibility', 'skills_required', 'required_tech_skills', 'salary_criteria', 'opened_at', 'closed_at', 'submitted_at', 'approve_disapprove_by', 'created_at', 'updated_at'],
-        'candidate_status_history' => ['id', 'candidate_id', 'status', 'created_at', 'updated_at'],
-        'hr_candidates' => ['id', 'hr_id', 'candidate_id', 'created_at', 'updated_at'],
-        'interviewers_candidates' => ['id', 'interviewer_id', 'candidate_id', 'created_at', 'updated_at'],
-        'exams' => ['id', 'department_id', 'name', 'assign_tl_id', 'duration', 'number_of_questions', 'guidance', 'type', 'expertise_level', 'status', 'created_at', 'updated_at', 'deleted_at'],
-        'exam_question_banks' => ['id', 'exam_id', 'question_bank_id', 'level_id', 'department_id', 'number_of_question', 'created_by', 'updated_by', 'created_at', 'updated_at', 'deleted_at'],
-        'question_banks' => ['id', 'name', 'level_id', 'department_id', 'created_by', 'updated_by', 'created_at', 'updated_at', 'deleted_at'],
-        'questions' => ['id', 'department_id', 'exam_id', 'level_id', 'question', 'question_type', 'a', 'b', 'c', 'd', 'e', 'answer', 'multi_answers', 'more_info', 'status', 'created_by', 'updated_by', 'created_at', 'updated_at', 'deleted_at'],
-        'tests' => ['id', 'user_id', 'department_id', 'level_id', 'question_id', 'answer', 'multiple_answer', 'descriptive_answer', 'correct', 'reviewed', 'created_at', 'updated_at'],
-        'user_schedules' => ['id', 'user_id', 'scheduler_id', 'interviewers', 'interview_date_time', 'review', 'interview_conducted', 'created_at', 'updated_at'],
-        'user_schedules_old' => ['id', 'user_id', 'scheduled_1_with', 'scheduled_2_with', 'scheduled_3_with', 'scheduled_4_with', 'scheduled_5_with', 'scheduled_6_with', 'scheduled_date_time_1', 'scheduled_date_time_2', 'scheduled_date_time_3', 'scheduled_date_time_4', 'scheduled_date_time_5', 'scheduled_date_time_6', 'review_1', 'review_2', 'review_3', 'review_4', 'review_5', 'review_6', 'interview_conducted', 'created_at', 'updated_at'],
-        'user_experiences' => ['id', 'user_id', 'organisation_name', 'designation', 'from_month', 'from_year', 'to_month', 'to_year', 'ctc', 'reason_for_leaving', 'created_at', 'updated_at', 'deleted_at'],
-        'user_qualifications' => ['id', 'user_id', 'degree', 'university', 'specialisation', 'passing_year', 'percentage', 'achievements', 'created_at', 'updated_at', 'deleted_at'],
-        'user_families' => ['id', 'user_id', 'name', 'relation', 'education', 'occupation', 'age', 'salary', 'created_at', 'updated_at', 'deleted_at'],
-        'user_references' => ['id', 'user_id', 'name', 'designation', 'organisation', 'email', 'contact', 'created_at', 'updated_at', 'deleted_at'],
-        'user_inquiry_forms' => ['id', 'user_id', 'email', 'token', 'total_relevant_experience', 'current_ctc', 'expected_ctc', 'is_salary_negotiable', 'when_can_you_join_us', 'reason_for_job_change', 'ready_to_relocate', 'appeared_earlier', 'spi', 'semester', 'education', 'linkedin', 'git', 'from_where', 'send_inquiry_form', 'send_details_to_tl', 'created_at', 'updated_at'],
-        'schedules' => ['id', 'name', 'email', 'type', 'created_at', 'updated_at'],
-        'send_updates' => ['id', 'name', 'email', 'status', 'want_to_share_weekly_report', 'sent_other_emails', 'created_at', 'updated_at'],
-        'site_settings' => ['id', 'title', 'email', 'phone_1', 'phone_2', 'copy_right', 'question_limit', 'time_limit', 'register_link_status', 'exam_ss_timer', 'created_at', 'updated_at'],
-        'roles' => ['id', 'name', 'guard_name', 'created_at', 'updated_at'],
-        'permissions' => ['id', 'name', 'guard_name', 'created_at', 'updated_at'],
-        'role_has_permissions' => ['role_id', 'permission_id'],
-        'model_has_roles' => ['role_id', 'model_type', 'model_id'],
-        'model_has_permissions' => ['permission_id', 'model_type', 'model_id'],
-    ];
+        [
+            'users' => ['id', 'department_id', 'college_id', 'course_id', 'level_id', 'requisition_id', 'name', 'email', 'role', 'gender', 'dob', 'address', 'city', 'state', 'country', 'mobile', 'status', 'active', 'candidate_status', 'last_salary', 'expected_salary', 'interview_percentage', 'practical_percentage', 'technical_percentage', 'communication', 'attitude', 'logical', 'is_teamlead', 'is_requester', 'last_login_at', 'created_at', 'updated_at', 'deleted_at'],
+            'departments' => ['id', 'name', 'slug', 'icon', 'is_active', 'created_at', 'updated_at'],
+            'designations' => ['id', 'department_id', 'name', 'slug', 'created_at', 'updated_at'],
+            'levels' => ['id', 'name', 'created_at', 'updated_at'],
+            'colleges' => ['id', 'name', 'cutoff', 'is_active', 'created_at', 'updated_at', 'deleted_at'],
+            'courses' => ['id', 'name', 'created_at', 'updated_at', 'deleted_at'],
+            'requisitions' => ['id', 'user_id', 'department_id', 'level_id', 'designation', 'position', 'experience', 'position_still_open', 'position_closed', 'status', 'priority_criteria', 'reporting_manager', 'educational_qualification', 'responsibility', 'skills_required', 'required_tech_skills', 'salary_criteria', 'opened_at', 'closed_at', 'submitted_at', 'approve_disapprove_by', 'created_at', 'updated_at'],
+            'candidate_status_history' => ['id', 'candidate_id', 'status', 'created_at', 'updated_at'],
+            'hr_candidates' => ['id', 'hr_id', 'candidate_id', 'created_at', 'updated_at'],
+            'interviewers_candidates' => ['id', 'interviewer_id', 'candidate_id', 'created_at', 'updated_at'],
+            'exams' => ['id', 'department_id', 'name', 'assign_tl_id', 'duration', 'number_of_questions', 'guidance', 'type', 'expertise_level', 'status', 'created_at', 'updated_at', 'deleted_at'],
+            'exam_question_banks' => ['id', 'exam_id', 'question_bank_id', 'level_id', 'department_id', 'number_of_question', 'created_by', 'updated_by', 'created_at', 'updated_at', 'deleted_at'],
+            'question_banks' => ['id', 'name', 'level_id', 'department_id', 'created_by', 'updated_by', 'created_at', 'updated_at', 'deleted_at'],
+            'questions' => ['id', 'department_id', 'exam_id', 'level_id', 'question', 'question_type', 'a', 'b', 'c', 'd', 'e', 'answer', 'multi_answers', 'more_info', 'status', 'created_by', 'updated_by', 'created_at', 'updated_at', 'deleted_at'],
+            'tests' => ['id', 'user_id', 'department_id', 'level_id', 'question_id', 'answer', 'multiple_answer', 'descriptive_answer', 'correct', 'reviewed', 'created_at', 'updated_at'],
+            'user_schedules' => ['id', 'user_id', 'scheduler_id', 'interviewers', 'interview_date_time', 'review', 'interview_conducted', 'created_at', 'updated_at'],
+            'user_schedules_old' => ['id', 'user_id', 'scheduled_1_with', 'scheduled_2_with', 'scheduled_3_with', 'scheduled_4_with', 'scheduled_5_with', 'scheduled_6_with', 'scheduled_date_time_1', 'scheduled_date_time_2', 'scheduled_date_time_3', 'scheduled_date_time_4', 'scheduled_date_time_5', 'scheduled_date_time_6', 'review_1', 'review_2', 'review_3', 'review_4', 'review_5', 'review_6', 'interview_conducted', 'created_at', 'updated_at'],
+            'user_experiences' => ['id', 'user_id', 'organisation_name', 'designation', 'from_month', 'from_year', 'to_month', 'to_year', 'ctc', 'reason_for_leaving', 'created_at', 'updated_at', 'deleted_at'],
+            'user_qualifications' => ['id', 'user_id', 'degree', 'university', 'specialisation', 'passing_year', 'percentage', 'achievements', 'created_at', 'updated_at', 'deleted_at'],
+            'user_families' => ['id', 'user_id', 'name', 'relation', 'education', 'occupation', 'age', 'salary', 'created_at', 'updated_at', 'deleted_at'],
+            'user_references' => ['id', 'user_id', 'name', 'designation', 'organisation', 'email', 'contact', 'created_at', 'updated_at', 'deleted_at'],
+            'user_inquiry_forms' => ['id', 'user_id', 'email', 'token', 'total_relevant_experience', 'current_ctc', 'expected_ctc', 'is_salary_negotiable', 'when_can_you_join_us', 'reason_for_job_change', 'ready_to_relocate', 'appeared_earlier', 'spi', 'semester', 'education', 'linkedin', 'git', 'from_where', 'send_inquiry_form', 'send_details_to_tl', 'created_at', 'updated_at'],
+            'schedules' => ['id', 'name', 'email', 'type', 'created_at', 'updated_at'],
+            'send_updates' => ['id', 'name', 'email', 'status', 'want_to_share_weekly_report', 'sent_other_emails', 'created_at', 'updated_at'],
+            'site_settings' => ['id', 'title', 'email', 'phone_1', 'phone_2', 'copy_right', 'question_limit', 'time_limit', 'register_link_status', 'exam_ss_timer', 'created_at', 'updated_at'],
+            'roles' => ['id', 'name', 'guard_name', 'created_at', 'updated_at'],
+            'permissions' => ['id', 'name', 'guard_name', 'created_at', 'updated_at'],
+            'role_has_permissions' => ['role_id', 'permission_id'],
+            'model_has_roles' => ['role_id', 'model_type', 'model_id'],
+            'model_has_permissions' => ['permission_id', 'model_type', 'model_id'],
+        ];
 
     private const array ALLOWED_OPERATORS = [
         '=',
@@ -74,7 +74,7 @@ class DatabaseQueryTool implements Tool
     protected function redact(array $row): array
     {
         return collect($row)
-            ->map(fn(mixed $value, string $column): mixed => Str::endsWith(
+            ->map(fn (mixed $value, string $column): mixed => Str::endsWith(
                 Str::lower($column),
                 self::REDACTED_SUFFIXES
             ) ? '[REDACTED]' : $value)
@@ -124,7 +124,7 @@ class DatabaseQueryTool implements Tool
 
         // Run the query, redact sensitive columns, cap the output size
         $rows = $query->get()
-            ->map(fn(object $row): array => $this->redact((array) $row))
+            ->map(fn (object $row): array => $this->redact((array) $row))
             ->all();
 
         return $this->formatOutput($rows);

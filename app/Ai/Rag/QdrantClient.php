@@ -15,7 +15,7 @@ class QdrantClient
 
     public function __construct()
     {
-        $this->baseUrl    = rtrim(config('ai.qdrant.host'), '/').':'.config('ai.qdrant.port');
+        $this->baseUrl = rtrim(config('ai.qdrant.host'), '/').':'.config('ai.qdrant.port');
         $this->collection = config('ai.qdrant.collection');
         $this->dimensions = config('ai.qdrant.dimensions');
     }
@@ -38,12 +38,12 @@ class QdrantClient
         Log::info('QdrantClient: creating collection', [
             'collection' => $this->collection,
             'dimensions' => $this->dimensions,
-            'distance'   => 'Cosine',
+            'distance' => 'Cosine',
         ]);
 
         Http::put("{$this->baseUrl}/collections/{$this->collection}", [
             'vectors' => [
-                'size'     => $this->dimensions,
+                'size' => $this->dimensions,
                 'distance' => 'Cosine',
             ],
         ])->throw();
@@ -60,8 +60,8 @@ class QdrantClient
     {
         Log::info('QdrantClient: upserting points', [
             'collection' => $this->collection,
-            'count'      => count($points),
-            'point_ids'  => array_column($points, 'id'),
+            'count' => count($points),
+            'point_ids' => array_column($points, 'id'),
         ]);
 
         Http::put("{$this->baseUrl}/collections/{$this->collection}/points", [
@@ -70,7 +70,7 @@ class QdrantClient
 
         Log::info('QdrantClient: upsert successful', [
             'collection' => $this->collection,
-            'count'      => count($points),
+            'count' => count($points),
         ]);
     }
 
@@ -83,14 +83,14 @@ class QdrantClient
     public function search(array $vector, int $limit = 5, array $filter = []): array
     {
         Log::info('QdrantClient: searching', [
-            'collection'    => $this->collection,
-            'limit'         => $limit,
+            'collection' => $this->collection,
+            'limit' => $limit,
             'filter_active' => ! empty($filter),
         ]);
 
         $body = [
-            'vector'       => $vector,
-            'limit'        => $limit,
+            'vector' => $vector,
+            'limit' => $limit,
             'with_payload' => true,
         ];
 
@@ -105,8 +105,8 @@ class QdrantClient
 
         Log::info('QdrantClient: search results', [
             'collection' => $this->collection,
-            'hits'       => count($results),
-            'top_score'  => ! empty($results) ? round($results[0]['score'], 4) : null,
+            'hits' => count($results),
+            'top_score' => ! empty($results) ? round($results[0]['score'], 4) : null,
         ]);
 
         return $results;
@@ -118,14 +118,14 @@ class QdrantClient
     public function deleteByCandidate(int $candidateId): void
     {
         Log::info('QdrantClient: deleting points for candidate', [
-            'collection'   => $this->collection,
+            'collection' => $this->collection,
             'candidate_id' => $candidateId,
         ]);
 
         Http::post("{$this->baseUrl}/collections/{$this->collection}/points/delete", [
             'filter' => [
                 'must' => [[
-                    'key'   => 'candidate_id',
+                    'key' => 'candidate_id',
                     'match' => ['value' => $candidateId],
                 ]],
             ],

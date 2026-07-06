@@ -2,7 +2,6 @@
 
 namespace App\Ai\Agents;
 
-use App\Ai\Tools\DatabaseQueryTool;
 use App\Ai\Tools\QuiryBuilderTool;
 use App\Ai\Tools\ResumeSearchTool;
 use App\Models\AgentConversationMessage;

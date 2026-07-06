@@ -2,6 +2,7 @@
 
 namespace App\Ai\Rag;
 
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -9,15 +10,15 @@ use Smalot\PdfParser\Parser;
 
 class ResumeIndexer
 {
-    private const RESUME_DIR    = '/var/www/html/iresource/public/uploads/resume/';
+    private const RESUME_DIR = '/var/www/html/iresource/public/uploads/resume/';
 
-    private const CHUNK_SIZE    = 500;
+    private const CHUNK_SIZE = 500;
 
     private const CHUNK_OVERLAP = 80;
 
-    private const EMBED_BATCH   = 5;
+    private const EMBED_BATCH = 5;
 
-    private const EMBED_MODEL   = 'text-embedding-3-small';
+    private const EMBED_MODEL = 'text-embedding-3-small';
 
     public function __construct(private QdrantClient $qdrant) {}
 
@@ -28,12 +29,12 @@ class ResumeIndexer
     public function indexAll(bool $force = false, ?int $candidateId = null): array
     {
         Log::info('ResumeIndexer: starting', [
-            'force'        => $force,
+            'force' => $force,
             'candidate_id' => $candidateId ?? 'all',
         ]);
 
         $candidates = $this->fetchCandidates($candidateId);
-        $results    = ['indexed' => 0, 'skipped' => 0, 'failed' => 0];
+        $results = ['indexed' => 0, 'skipped' => 0, 'failed' => 0];
 
         Log::info('ResumeIndexer: candidates fetched', [
             'total' => $candidates->count(),
@@ -42,24 +43,26 @@ class ResumeIndexer
         $this->qdrant->ensureCollection();
 
         foreach ($candidates as $candidate) {
-            $path = self::RESUME_DIR . $candidate->resume;
+            $path = self::RESUME_DIR.$candidate->resume;
 
             if (! file_exists($path)) {
                 Log::warning('ResumeIndexer: resume file not found — skipping', [
-                    'candidate_id'   => $candidate->id,
+                    'candidate_id' => $candidate->id,
                     'candidate_name' => $candidate->name,
-                    'expected_path'  => $path,
+                    'expected_path' => $path,
                 ]);
                 $results['skipped']++;
+
                 continue;
             }
 
             if (! $force && $this->isAlreadyIndexed($candidate->id)) {
                 Log::info('ResumeIndexer: already indexed — skipping', [
-                    'candidate_id'   => $candidate->id,
+                    'candidate_id' => $candidate->id,
                     'candidate_name' => $candidate->name,
                 ]);
                 $results['skipped']++;
+
                 continue;
             }
 
@@ -68,10 +71,10 @@ class ResumeIndexer
                 $results['indexed']++;
             } catch (\Throwable $e) {
                 Log::error('ResumeIndexer: indexing failed', [
-                    'candidate_id'   => $candidate->id,
+                    'candidate_id' => $candidate->id,
                     'candidate_name' => $candidate->name,
-                    'error'          => $e->getMessage(),
-                    'trace'          => $e->getTraceAsString(),
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString(),
                 ]);
                 $results['failed']++;
             }
@@ -89,11 +92,11 @@ class ResumeIndexer
     {
         Log::info('ResumeIndexer: parsing PDF', [
             'candidate_id' => $candidate->id,
-            'file'         => basename($filePath),
+            'file' => basename($filePath),
         ]);
 
-        $parser = new Parser();
-        $text   = trim($parser->parseFile($filePath)->getText());
+        $parser = new Parser;
+        $text = trim($parser->parseFile($filePath)->getText());
         unset($parser);
 
         if (blank($text)) {
@@ -102,16 +105,16 @@ class ResumeIndexer
 
         Log::info('ResumeIndexer: PDF parsed', [
             'candidate_id' => $candidate->id,
-            'text_length'  => strlen($text),
+            'text_length' => strlen($text),
         ]);
 
         $chunks = $this->chunk($text);
 
         Log::info('ResumeIndexer: text chunked', [
             'candidate_id' => $candidate->id,
-            'chunk_count'  => count($chunks),
-            'chunk_size'   => self::CHUNK_SIZE,
-            'overlap'      => self::CHUNK_OVERLAP,
+            'chunk_count' => count($chunks),
+            'chunk_size' => self::CHUNK_SIZE,
+            'overlap' => self::CHUNK_OVERLAP,
         ]);
 
         // Remove stale vectors before re-indexing
@@ -122,32 +125,32 @@ class ResumeIndexer
             // Safe to ignore on first run — collection may be empty
         }
 
-        $batches     = array_chunk($chunks, self::EMBED_BATCH);
+        $batches = array_chunk($chunks, self::EMBED_BATCH);
         $totalPoints = 0;
 
         foreach ($batches as $batchIndex => $batch) {
             Log::info('ResumeIndexer: embedding batch', [
                 'candidate_id' => $candidate->id,
-                'batch'        => $batchIndex + 1 . '/' . count($batches),
-                'texts'        => count($batch),
-                'model'        => self::EMBED_MODEL,
+                'batch' => $batchIndex + 1 .'/'.count($batches),
+                'texts' => count($batch),
+                'model' => self::EMBED_MODEL,
             ]);
 
             $vectors = $this->embed($batch);
-            $points  = [];
+            $points = [];
 
             foreach ($batch as $i => $chunkText) {
                 $globalIndex = $batchIndex * self::EMBED_BATCH + $i;
 
                 $points[] = [
-                    'id'      => ($candidate->id * 10000) + $globalIndex,
-                    'vector'  => $vectors[$i],
+                    'id' => ($candidate->id * 10000) + $globalIndex,
+                    'vector' => $vectors[$i],
                     'payload' => [
-                        'candidate_id'   => (int) $candidate->id,
+                        'candidate_id' => (int) $candidate->id,
                         'candidate_name' => $candidate->name,
-                        'resume_file'    => $candidate->resume,
-                        'chunk_index'    => $globalIndex,
-                        'chunk_text'     => $chunkText,
+                        'resume_file' => $candidate->resume,
+                        'chunk_index' => $globalIndex,
+                        'chunk_text' => $chunkText,
                     ],
                 ];
             }
@@ -157,16 +160,16 @@ class ResumeIndexer
 
             Log::info('ResumeIndexer: batch upserted to Qdrant', [
                 'candidate_id' => $candidate->id,
-                'batch'        => $batchIndex + 1 . '/' . count($batches),
-                'points'       => count($points),
+                'batch' => $batchIndex + 1 .'/'.count($batches),
+                'points' => count($points),
             ]);
         }
 
         Log::info('ResumeIndexer: candidate indexed successfully', [
-            'candidate_id'   => $candidate->id,
+            'candidate_id' => $candidate->id,
             'candidate_name' => $candidate->name,
-            'total_chunks'   => count($chunks),
-            'total_points'   => $totalPoints,
+            'total_chunks' => count($chunks),
+            'total_points' => $totalPoints,
         ]);
     }
 
@@ -181,7 +184,7 @@ class ResumeIndexer
                 limit: 1,
                 filter: [
                     'must' => [[
-                        'key'   => 'candidate_id',
+                        'key' => 'candidate_id',
                         'match' => ['value' => $candidateId],
                     ]],
                 ]
@@ -196,7 +199,7 @@ class ResumeIndexer
     /**
      * Fetch interviewee candidates with a resume value from iresource_db.
      */
-    private function fetchCandidates(?int $candidateId): \Illuminate\Support\Collection
+    private function fetchCandidates(?int $candidateId): Collection
     {
         $query = DB::connection('iresource_db')
             ->table('users')
@@ -236,10 +239,10 @@ class ResumeIndexer
      */
     private function chunk(string $text): array
     {
-        $text   = preg_replace('/\s+/', ' ', $text);
+        $text = preg_replace('/\s+/', ' ', $text);
         $length = strlen($text);
         $chunks = [];
-        $start  = 0;
+        $start = 0;
 
         while ($start < $length) {
             $chunk = substr($text, $start, self::CHUNK_SIZE);
@@ -256,7 +259,7 @@ class ResumeIndexer
             }
 
             $chunks[] = trim($chunk);
-            $advance  = strlen($chunk) - self::CHUNK_OVERLAP;
+            $advance = strlen($chunk) - self::CHUNK_OVERLAP;
 
             if ($advance <= 0) {
                 break;

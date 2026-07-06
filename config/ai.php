@@ -148,8 +148,8 @@ return [
     |--------------------------------------------------------------------------
     */
     'qdrant' => [
-        'host'       => env('QDRANT_HOST', 'http://localhost'),
-        'port'       => env('QDRANT_PORT', 6333),
+        'host' => env('QDRANT_HOST', 'http://localhost'),
+        'port' => env('QDRANT_PORT', 6333),
         'collection' => env('QDRANT_COLLECTION', 'candidate_resumes'),
         'dimensions' => env('QDRANT_DIMENSIONS', 1536),
     ],

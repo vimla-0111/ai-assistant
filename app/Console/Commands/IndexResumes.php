@@ -27,7 +27,7 @@ class IndexResumes extends Command
             return self::FAILURE;
         }
 
-        $force       = $this->option('force');
+        $force = $this->option('force');
         $candidateId = $this->option('candidate') ? (int) $this->option('candidate') : null;
 
         if ($force) {
@@ -45,7 +45,7 @@ class IndexResumes extends Command
             [[$results['indexed'], $results['skipped'], $results['failed']]]
         );
 
-        $info  = $qdrant->collectionInfo();
+        $info = $qdrant->collectionInfo();
         $count = $info['points_count'] ?? 'unknown';
         $this->info("Qdrant collection now has {$count} points.");
 

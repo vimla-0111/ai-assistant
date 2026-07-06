@@ -29,6 +29,7 @@ class QuiryBuilderTool implements Tool
         $query = $request->string('query');
         try {
             $result = eval("return {$query};");
+
             return is_string($result) ? $result : json_encode($result);
         } catch (\Throwable $e) {
             return json_encode(['error' => $e->getMessage()]);
