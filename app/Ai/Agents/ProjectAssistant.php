@@ -32,11 +32,14 @@ class ProjectAssistant implements Agent, Conversational, HasTools
      */
     public function instructions(): Stringable|string
     {
-        return config('ai.prompt_path') && Storage::disk('local')->exists(config('ai.prompt_path'))
-            ? Storage::disk('local')->get(config('ai.prompt_path')).Storage::disk('local')->get('ai/context/database_schema.txt')
-            : 'You are a smart database assistant. You have access to tools that run queries and return results. '
-            .'After using tools to gather information, always provide a clear, concise summary of the results in your response. '
-            .'Return the actual data from your tool results, formatted clearly for the user.';
+        // if (config('ai.prompt_path') && Storage::disk('local')->exists(config('ai.prompt_path'))) {
+        //     return Storage::disk('local')->get(config('ai.prompt_path'));
+        // }
+
+        return 'You are a smart assistant with access to two tools: a resume search tool and a database query builder tool. '
+            .'Use the resume search tool to answer questions about candidate resumes, skills, experience, and education. '
+            .'Use the database query builder tool to answer questions about application data, records, and table values. '
+            .'Always use tools when needed, do not invent facts, and summarize the actual tool results clearly and concisely.';
     }
 
     /**

@@ -4,8 +4,9 @@ namespace App\Ai\Rag;
 
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Laravel\Ai\Embeddings;
+use Laravel\Ai\Enums\Lab;
 use Smalot\PdfParser\Parser;
 
 class ResumeIndexer
@@ -215,21 +216,18 @@ class ResumeIndexer
     }
 
     /**
-     * Generate embeddings via OpenRouter API.
+     * Generate embeddings via the Laravel AI SDK.
      *
      * @param  string[]  $inputs
      * @return array<int, float[]>
      */
     private function embed(array $inputs): array
     {
-        $response = Http::withToken(config('ai.providers.openrouter.key'))
+        $response = Embeddings::for($inputs)
             ->timeout(60)
-            ->post('https://openrouter.ai/api/v1/embeddings', [
-                'model' => self::EMBED_MODEL,
-                'input' => $inputs,
-            ])->throw();
+            ->generate(Lab::OpenRouter, self::EMBED_MODEL);
 
-        return array_column($response->json('data'), 'embedding');
+        return $response->embeddings;
     }
 
     /**

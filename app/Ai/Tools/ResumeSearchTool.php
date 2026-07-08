@@ -6,13 +6,15 @@ use App\Ai\Rag\QdrantClient;
 use Illuminate\Contracts\JsonSchema\JsonSchema;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Laravel\Ai\Embeddings;
+use Laravel\Ai\Enums\Lab;
 use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Stringable;
 
 class ResumeSearchTool implements Tool
 {
-    private const EMBED_MODEL = 'text-embedding-3-small';
+    private const string EMBED_MODEL = 'text-embedding-3-small';
 
     public function description(): Stringable|string
     {
@@ -112,13 +114,10 @@ class ResumeSearchTool implements Tool
      */
     private function embed(string $text): array
     {
-        $response = Http::withToken(config('ai.providers.openrouter.key'))
+        $response = Embeddings::for([$text])
             ->timeout(30)
-            ->post('https://openrouter.ai/api/v1/embeddings', [
-                'model' => self::EMBED_MODEL,
-                'input' => [$text],
-            ])->throw();
+            ->generate(Lab::OpenRouter, self::EMBED_MODEL);
 
-        return $response->json('data.0.embedding');
+        return $response->first();
     }
 }
