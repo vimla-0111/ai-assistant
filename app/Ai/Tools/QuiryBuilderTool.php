@@ -14,11 +14,11 @@ class QuiryBuilderTool implements Tool
      */
     public function description(): Stringable|string
     {
-        return 'Execute Laravel query builder expressions against the iresource_db database and return results as JSON. '
-            .'Only SELECT queries and aggregate methods (count, sum, avg, get, first, pluck, value) are allowed. '
-            .'Always use DB::connection("iresource_db") for all queries. '
-            .'IMPORTANT - users table "active" column values: 1 = inactive, 2 = active. '
-            .'Always use ->where("active", 2) when filtering for active users/candidates.';
+        return 'Use this tool to fetch data from the database to answer user questions about application records, counts, or specific rows. '
+            .'Execute Laravel Query Builder PHP code against the iresource_db database. '
+            .'DO NOT write raw SQL (like "SELECT * FROM..."). You MUST write valid PHP code starting with DB::connection("iresource_db")->table(...). '
+            .'STRICTLY FORBIDDEN: Do not write queries that modify data (e.g., insert, update, delete, drop, truncate). Only SELECT queries and aggregate methods (count, sum, avg, get, first, pluck, value) are allowed. '
+            .'Example: DB::connection("iresource_db")->table("users")->where("active", 2)->get();';
     }
 
     /**

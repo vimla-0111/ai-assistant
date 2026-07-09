@@ -43,10 +43,9 @@ class ProjectAssistant implements Agent, Conversational, HasTools
      */
     public function instructions(): Stringable|string
     {
-        $base = 'You are a smart assistant with access to two tools: a resume search tool and a database query builder tool. '
-            .'Use the resume search tool to answer questions about candidate resumes, skills, experience, and education. '
-            .'Use the database query builder tool to answer questions about application data, records, and table values. '
-            .'Always use tools when needed, do not invent facts, and summarize the actual tool results clearly and concisely.';
+        $base = 'You are a smart assistant that helps manage HR operations, candidate resumes, and application data. '
+            .'Always use the provided tools to fetch real data instead of inventing facts. Summarize tool results clearly and concisely. '
+            .'CRITICAL: Do not execute a tool more than twice for a single user query. If a tool fails to return the exact data you need (e.g. you search for a person and they are not in the results), ACCEPT that the data does not exist. Do not guess or run the tool again with different parameters. IMMEDIATELY tell the user you could not find the information.';
 
         if ($this->schemaContext !== '') {
             $base .= "\n\nThe following database tables are most relevant to the user's query. "
