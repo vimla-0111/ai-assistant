@@ -61,7 +61,7 @@ class SchemaSearchService
                 }
 
                 if ($columns !== '') {
-                    $block .= "\nColumns: {$columns}";
+                    $block .= "\nColumns:\n{$columns}";
                 }
 
                 return $block;

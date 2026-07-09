@@ -142,6 +142,7 @@ return [
     */
     'prompt_path' => 'ai/prompt.md',
     'db_schema_path' => 'ai/context/database_schema.txt',
+    'data_dictionary_path' => 'ai/context/data_dictionary.json',
 
     /*
     |--------------------------------------------------------------------------
