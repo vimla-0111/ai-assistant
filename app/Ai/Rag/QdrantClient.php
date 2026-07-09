@@ -13,10 +13,10 @@ class QdrantClient
 
     private int $dimensions;
 
-    public function __construct()
+    public function __construct(?string $collection = null)
     {
         $this->baseUrl = rtrim(config('ai.qdrant.host'), '/').':'.config('ai.qdrant.port');
-        $this->collection = config('ai.qdrant.collection');
+        $this->collection = $collection ?? config('ai.qdrant.collection');
         $this->dimensions = config('ai.qdrant.dimensions');
     }
 

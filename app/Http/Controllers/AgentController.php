@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Ai\Agents\ProjectAssistant;
+use App\Ai\Rag\SchemaSearchService;
 use App\Http\Requests\AgentPromptRequest;
 use App\Models\AgentConversationMessage;
 use Illuminate\Http\JsonResponse;
@@ -26,15 +27,22 @@ class AgentController extends Controller
 
     /**
      * Send a prompt to the agent and return the response payload.
+     *
+     * Performs a schema similarity search before prompting the agent so that
+     * only the relevant table definitions are injected into the instructions,
+     * giving the model accurate context for database query generation.
      */
     public function store(AgentPromptRequest $request): JsonResponse
     {
         $user = $request->user();
         $prompt = $request->validated('prompt');
 
+        $schemaContext = app(SchemaSearchService::class)->findRelevantSchema($prompt);
+
         try {
             // using openrouter provider
             $response = ProjectAssistant::make(user: $user)
+                ->withSchemaContext($schemaContext)
                 ->continueLastConversation($user)
                 ->prompt(
                     $prompt,
@@ -45,6 +53,7 @@ class AgentController extends Controller
 
             // using openai provider
             // $response = ProjectAssistant::make(user: $user)
+            //     ->withSchemaContext($schemaContext)
             //     ->continueLastConversation($user)
             //     ->prompt(
             //         $prompt,
@@ -58,6 +67,7 @@ class AgentController extends Controller
                 'message' => 'The agent is unavailable right now. Please try again.',
             ], 502);
         }
+
         Log::info('Agent response', [
             'text' => $response->text,
             'conversation_id' => $response->conversationId,

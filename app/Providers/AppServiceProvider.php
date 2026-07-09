@@ -2,6 +2,9 @@
 
 namespace App\Providers;
 
+use App\Ai\Rag\QdrantClient;
+use App\Ai\Rag\SchemaIndexer;
+use App\Ai\Rag\SchemaSearchService;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
@@ -14,7 +17,17 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->bind('qdrant.schema', fn () => new QdrantClient(
+            config('ai.qdrant.schema_collection')
+        ));
+
+        $this->app->bind(SchemaIndexer::class, fn ($app) => new SchemaIndexer(
+            $app->make('qdrant.schema')
+        ));
+
+        $this->app->bind(SchemaSearchService::class, fn ($app) => new SchemaSearchService(
+            $app->make('qdrant.schema')
+        ));
     }
 
     /**
