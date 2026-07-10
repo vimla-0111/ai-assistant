@@ -37,17 +37,35 @@ class AgentController extends Controller
         $user = $request->user();
         $prompt = $request->validated('prompt');
 
-        $schemaContext = app(SchemaSearchService::class)->findRelevantSchema($prompt);
+        $promptLower = strtolower(trim($prompt));
+        $isGreeting = strlen($promptLower) < 10 && in_array($promptLower, ['hi', 'hello', 'hey']);
+        $isResumeQuery = \Illuminate\Support\Str::contains($promptLower, ['resume', 'cv', 'skill', 'experience', 'education', 'certifications']);
+
+        $schemaContext = '';
+        if (!$isGreeting && !$isResumeQuery) {
+            $schemaContext = app(SchemaSearchService::class)->findRelevantSchema($prompt);
+        }
 
         try {
             // using openrouter provider
-            $response = ProjectAssistant::make(user: $user)
+            // $response = ProjectAssistant::make(user: $user)
+            //     ->withSchemaContext($schemaContext)
+            //     ->continueLastConversation($user)
+            //     ->prompt(
+            //         $prompt,
+            //         provider: Lab::OpenRouter,
+            //         model: 'nvidia/nemotron-3-super-120b-a12b:free',
+            //         timeout: 120,
+            //     );
+
+            // groq
+             $response = ProjectAssistant::make(user: $user)
                 ->withSchemaContext($schemaContext)
                 ->continueLastConversation($user)
                 ->prompt(
                     $prompt,
-                    provider: Lab::OpenRouter,
-                    model: 'nvidia/nemotron-3-super-120b-a12b:free',
+                    provider: Lab::Groq,
+                    model: 'openai/gpt-oss-20b',
                     timeout: 120,
                 );
 

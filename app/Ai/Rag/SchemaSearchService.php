@@ -41,6 +41,18 @@ class SchemaSearchService
                 return '';
             }
 
+            // Dynamic Score Thresholding
+            // The text-embedding-3-small model clusters scores tightly. 
+            // We require matches to be within 10% of the top score, with a hard minimum of 0.22.
+            $topScore = $results[0]['score'] ?? 0;
+            $threshold = max(0.22, $topScore * 0.90);
+
+            $results = array_filter($results, fn (array $hit) => ($hit['score'] ?? 0) >= $threshold);
+
+            if (empty($results)) {
+                return '';
+            }
+
             $tableNames = array_map(
                 fn (array $hit): string => $hit['payload']['table_name'] ?? 'unknown',
                 $results

@@ -7,7 +7,7 @@ use Laravel\Ai\Contracts\Tool;
 use Laravel\Ai\Tools\Request;
 use Stringable;
 
-class QuiryBuilderTool implements Tool
+class QueryBuilderTool implements Tool
 {
     /**
      * Get the description of the tool's purpose.
@@ -18,7 +18,8 @@ class QuiryBuilderTool implements Tool
             .'Execute Laravel Query Builder PHP code against the iresource_db database. '
             .'DO NOT write raw SQL (like "SELECT * FROM..."). You MUST write valid PHP code starting with DB::connection("iresource_db")->table(...). '
             .'STRICTLY FORBIDDEN: Do not write queries that modify data (e.g., insert, update, delete, drop, truncate). Only SELECT queries and aggregate methods (count, sum, avg, get, first, pluck, value) are allowed. '
-            .'Example: DB::connection("iresource_db")->table("users")->where("active", 2)->get();';
+            .'Example: DB::connection(\'iresource_db\')->table(\'users\')->where(\'active\', 2)->get(); '
+            .'CRITICAL: The query string must be perfectly valid JSON. If you use quotes inside the query, you MUST use single quotes or escape them properly.';
     }
 
     /**

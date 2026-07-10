@@ -2,7 +2,7 @@
 
 namespace App\Ai\Agents;
 
-use App\Ai\Tools\QuiryBuilderTool;
+use App\Ai\Tools\QueryBuilderTool;
 use App\Ai\Tools\ResumeSearchTool;
 use App\Models\AgentConversationMessage;
 use App\Models\User;
@@ -45,7 +45,8 @@ class ProjectAssistant implements Agent, Conversational, HasTools
     {
         $base = 'You are a smart assistant that helps manage HR operations, candidate resumes, and application data. '
             .'Always use the provided tools to fetch real data instead of inventing facts. Summarize tool results clearly and concisely. '
-            .'CRITICAL: Do not execute a tool more than twice for a single user query. If a tool fails to return the exact data you need (e.g. you search for a person and they are not in the results), ACCEPT that the data does not exist. Do not guess or run the tool again with different parameters. IMMEDIATELY tell the user you could not find the information.';
+            .'CRITICAL: Do not execute a tool more than twice for a single user query. If a tool fails to return the exact data you need (e.g. you search for a person and they are not in the results), ACCEPT that the data does not exist. Do not guess or run the tool again with different parameters. IMMEDIATELY tell the user you could not find the information. '
+            .'If the user\'s request is ambiguous and you are not 100% sure whether to use the resume search tool or the database query tool, DO NOT guess. Ask the user to clarify which one they want to search.';
 
         if ($this->schemaContext !== '') {
             $base .= "\n\nThe following database tables are most relevant to the user's query. "
@@ -80,6 +81,6 @@ class ProjectAssistant implements Agent, Conversational, HasTools
      */
     public function tools(): iterable
     {
-        return [new QuiryBuilderTool, new ResumeSearchTool];
+        return [new QueryBuilderTool, new ResumeSearchTool];
     }
 }
