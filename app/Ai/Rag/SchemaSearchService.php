@@ -14,7 +14,7 @@ class SchemaSearchService
 
     public function __construct(private QdrantClient $qdrant)
     {
-        $this->topK = (int) config('ai.qdrant.schema_top_k', 5);
+        $this->topK = (int) config('ai.qdrant.schema_top_k', 15);
     }
 
     /**
@@ -80,6 +80,8 @@ class SchemaSearchService
             }, $results);
 
             $blocks = array_filter($blocks, fn (string $b): bool => $b !== '');
+
+            Log::info('SchemaSearchService: returned schema chunks', ['chunks' => $blocks]);
 
             return implode("\n\n", $blocks);
         } catch (\Throwable $e) {
