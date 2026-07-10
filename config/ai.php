@@ -154,7 +154,7 @@ return [
         'port' => env('QDRANT_PORT', 6333),
         'collection' => env('QDRANT_COLLECTION', 'candidate_resumes'),
         'schema_collection' => env('QDRANT_SCHEMA_COLLECTION', 'table_schemas'),
-        'schema_top_k' => env('QDRANT_SCHEMA_TOP_K', 15),
+        'schema_top_k' => env('QDRANT_SCHEMA_TOP_K', 5),
         'dimensions' => env('QDRANT_DIMENSIONS', 1536),
     ],
 ];

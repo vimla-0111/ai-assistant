@@ -10,6 +10,11 @@ class SchemaSearchService
 {
     private const string EMBED_MODEL = 'text-embedding-3-small';
 
+    /**
+     * Hard minimum cosine similarity — results below this score are discarded.
+     */
+    private const float SCORE_THRESHOLD = 0.22;
+
     private int $topK;
 
     public function __construct(private QdrantClient $qdrant)
@@ -33,57 +38,8 @@ class SchemaSearchService
 
         try {
             $vector = $this->embed($prompt);
-            $results = $this->qdrant->search($vector, $limit);
 
-            if (empty($results)) {
-                Log::warning('SchemaSearchService: no schema matches found', ['prompt' => $prompt]);
-
-                return '';
-            }
-
-            // Dynamic Score Thresholding
-            // The text-embedding-3-small model clusters scores tightly. 
-            // We require matches to be within 10% of the top score, with a hard minimum of 0.22.
-            $topScore = $results[0]['score'] ?? 0;
-            $threshold = max(0.22, $topScore * 0.90);
-
-            $results = array_filter($results, fn (array $hit) => ($hit['score'] ?? 0) >= $threshold);
-
-            if (empty($results)) {
-                return '';
-            }
-
-            $tableNames = array_map(
-                fn (array $hit): string => $hit['payload']['table_name'] ?? 'unknown',
-                $results
-            );
-
-            Log::info('SchemaSearchService: matched tables', ['tables' => $tableNames]);
-
-            $blocks = array_map(function (array $hit): string {
-                $payload = $hit['payload'];
-                $tableName = $payload['table_name'] ?? '';
-                $columns = $payload['columns'] ?? $payload['schema_text'] ?? '';
-                $description = $payload['description'] ?? '';
-
-                $block = "Table: {$tableName}";
-
-                if ($description !== '') {
-                    $block .= "\nDescription: {$description}";
-                }
-
-                if ($columns !== '') {
-                    $block .= "\nColumns:\n{$columns}";
-                }
-
-                return $block;
-            }, $results);
-
-            $blocks = array_filter($blocks, fn (string $b): bool => $b !== '');
-
-            Log::info('SchemaSearchService: returned schema chunks', ['chunks' => $blocks]);
-
-            return implode("\n\n", $blocks);
+            return $this->searchByVector($vector, $limit);
         } catch (\Throwable $e) {
             Log::error('SchemaSearchService: search failed', [
                 'error' => $e->getMessage(),
@@ -95,10 +51,87 @@ class SchemaSearchService
     }
 
     /**
+     * Run a similarity search using a pre-computed embedding vector.
+     * Use this when the caller has already embedded the prompt (e.g. to
+     * reuse the same vector across multiple Qdrant collection searches).
+     *
+     * @param  float[]  $vector
+     */
+    public function findRelevantSchemaByVector(array $vector, ?int $limit = null): string
+    {
+        $limit = $limit ?? $this->topK;
+
+        try {
+            return $this->searchByVector($vector, $limit);
+        } catch (\Throwable $e) {
+            Log::error('SchemaSearchService: vector search failed', [
+                'error' => $e->getMessage(),
+            ]);
+
+            return '';
+        }
+    }
+
+    /**
+     * Core search logic shared by both public methods.
+     * Searches Qdrant, applies the score threshold, and formats the results.
+     *
+     * @param  float[]  $vector
+     */
+    private function searchByVector(array $vector, int $limit): string
+    {
+        $results = $this->qdrant->search($vector, $limit);
+
+        if (empty($results)) {
+            Log::warning('SchemaSearchService: no schema matches found');
+
+            return '';
+        }
+
+        $results = array_filter($results, fn (array $hit) => ($hit['score'] ?? 0) >= self::SCORE_THRESHOLD);
+
+        if (empty($results)) {
+            return '';
+        }
+
+        $tableNames = array_map(
+            fn (array $hit): string => $hit['payload']['table_name'] ?? 'unknown',
+            $results
+        );
+
+        Log::info('SchemaSearchService: matched tables', ['tables' => $tableNames]);
+
+        $blocks = array_map(function (array $hit): string {
+            $payload = $hit['payload'];
+            $tableName = $payload['table_name'] ?? '';
+            $columns = $payload['columns'] ?? $payload['schema_text'] ?? '';
+            $description = $payload['description'] ?? '';
+
+            $block = "Table: {$tableName}";
+
+            if ($description !== '') {
+                $block .= "\nDescription: {$description}";
+            }
+
+            if ($columns !== '') {
+                $block .= "\nColumns:\n{$columns}";
+            }
+
+            return $block;
+        }, $results);
+
+        $blocks = array_filter($blocks, fn (string $b): bool => $b !== '');
+
+        return implode("\n\n", $blocks);
+    }
+
+    /**
      * @return float[]
      */
     private function embed(string $text): array
     {
+        Log::info('SchemaSearchService: generating embedding', ['text' => $text]);
+
         $response = Embeddings::for([$text])
             ->timeout(30)
             ->generate(Lab::OpenRouter, self::EMBED_MODEL);

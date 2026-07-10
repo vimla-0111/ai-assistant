@@ -2,8 +2,8 @@
 
 namespace App\Ai\Agents;
 
+use App\Ai\Tools\ContextTool;
 use App\Ai\Tools\QueryBuilderTool;
-use App\Ai\Tools\ResumeSearchTool;
 use App\Models\AgentConversationMessage;
 use App\Models\User;
 use Laravel\Ai\Attributes\MaxSteps;
@@ -16,24 +16,28 @@ use Laravel\Ai\Messages\Message;
 use Laravel\Ai\Promptable;
 use Stringable;
 
-#[MaxSteps(5)]
+#[MaxSteps(7)]
 class ProjectAssistant implements Agent, Conversational, HasTools
 {
     use Promptable, RemembersConversations;
 
     private int $messageLimit = 2;
 
-    private string $schemaContext = '';
+    /**
+     * Context pre-fetched by AgentController and injected into the first prompt.
+     * May contain schema definitions, resume excerpts, or be empty for greetings.
+     */
+    private string $initialContext = '';
 
     public function __construct(public User $user) {}
 
     /**
-     * Attach relevant schema context to be injected into the instructions.
+     * Attach the pre-resolved context to be injected into the instructions.
      * Returns the same instance for fluent chaining.
      */
-    public function withSchemaContext(string $context): static
+    public function withInitialContext(string $context): static
     {
-        $this->schemaContext = $context;
+        $this->initialContext = $context;
 
         return $this;
     }
@@ -45,14 +49,15 @@ class ProjectAssistant implements Agent, Conversational, HasTools
     {
         $base = 'You are a smart assistant that helps manage HR operations, candidate resumes, and application data. '
             .'Always use the provided tools to fetch real data instead of inventing facts. Summarize tool results clearly and concisely. '
-            .'CRITICAL: Do not execute a tool more than twice for a single user query. If a tool fails to return the exact data you need (e.g. you search for a person and they are not in the results), ACCEPT that the data does not exist. Do not guess or run the tool again with different parameters. IMMEDIATELY tell the user you could not find the information. '
-            .'If the user\'s request is ambiguous and you are not 100% sure whether to use the resume search tool or the database query tool, DO NOT guess. Ask the user to clarify which one they want to search. '
-            .'IMPORTANT DB RULES: When querying ENUM columns (like `active`), ALWAYS use string values (e.g., ->where(\'active\', \'2\')) instead of integers (e.g., ->where(\'active\', 2)). MySQL interprets integers on ENUM columns as the 1-based index, which will return incorrect records!';
+            .'CRITICAL: Do not execute a tool more than twice for a single user query. If a tool returns an empty result (e.g. empty array or "No results"), ACCEPT that the data does not exist. DO NOT guess other tables or columns to retry. Immediately tell the user the data was not found. '
+            .'If the user\'s request is ambiguous between resume search and database query, ask the user to clarify. '
+            .'IMPORTANT DB RULES: When querying ENUM columns (like `active`), ALWAYS use string values (e.g., ->where(\'active\', \'2\')) instead of integers. MySQL interprets integers on ENUM columns as 1-based indexes, returning incorrect records! '
+            .'CONTEXT TOOL USAGE: If the context provided below is insufficient or missing for the task, call the ContextTool to fetch additional database schema (type="schema"), '
+            .'resume content (type="resume"), or both simultaneously (type="both"). For type="both", provide separate focused queries for each source via query_schema and query_resume.';
 
-        if ($this->schemaContext !== '') {
-            $base .= "\n\nThe following database tables are most relevant to the user's query. "
-                ."Use ONLY these tables and their columns when building database queries:\n\n"
-                .$this->schemaContext;
+        if ($this->initialContext !== '') {
+            $base .= "\n\nThe following context has been pre-fetched for this query. Use it to answer directly or to build an accurate database query:\n\n"
+                .$this->initialContext;
         }
 
         return $base;
@@ -82,6 +87,6 @@ class ProjectAssistant implements Agent, Conversational, HasTools
      */
     public function tools(): iterable
     {
-        return [new QueryBuilderTool, new ResumeSearchTool];
+        return [app(ContextTool::class), new QueryBuilderTool];
     }
 }
